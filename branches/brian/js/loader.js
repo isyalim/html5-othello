@@ -1,5 +1,12 @@
 var Othello = {
-	// Settings and constants here
+	// Namespaces
+	server : {
+
+	},
+
+	client : {
+
+	}
 };
 
 // start loading when main document is loaded
@@ -9,13 +16,14 @@ window.addEventListener("load", function() {
 			// Libraries
 			
 			// Scripts
-			"js/utils.js", "js/client.js"
+			/*"js/utils.js"*/, "js/client.js"
 		],
 
 		complete : function() {
 			console.log("All files have been loaded.", Othello);
 			
-			Othello.game.init();
+			Othello.client.game.init();
+			Othello.client.game.draw();
 		}
 	}]);
 }, false);
