@@ -14,10 +14,15 @@ Othello.client.game = function() {
 	var canvas, ctx;
 
 	init = function() {
+		// Get canvas context
 		canvas = document.querySelector("#gameBoard");
 		ctx = canvas.getContext("2d");
 
+		// Create cached images
 		cacheImages();
+
+		// Open socket connection to server
+
 	}
 
 
@@ -100,6 +105,18 @@ Othello.client.game = function() {
 		// Update local version of board
 
 		// Push update to server
+	}
+
+	// Sends move to game server
+	sendMove = function(x, y) {
+		// Put information into JSON object
+		var position = {
+			x : x, 
+			y : y
+		};
+
+		// Send message to server
+
 	}
 
 	return {
