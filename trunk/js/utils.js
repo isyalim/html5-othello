@@ -1,4 +1,3 @@
-// Useful methods
 // Othello.namespace = function(name, separator, container){
 //   var ns = name.split(separator || '.'),
 //     o = container || Othello,
