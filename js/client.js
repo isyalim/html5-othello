@@ -12,7 +12,7 @@ Othello.client.game = function() {
 	var blackPieceImage;
 	var playerName;
 	var canvas, ctx;
-	
+	var personToInvite="";
 	var socket;
 	var serverurl="ws://localhost:9090";
 
@@ -30,6 +30,7 @@ Othello.client.game = function() {
 		 
           document.getElementById('serverstatus').innerHTML = "Server Connected";
 		  loginbutton.disabled=false;  
+		  
         });
 		 socket.addEventListener("close", function(event) { 
           document.getElementById('serverstatus').innerHTML = "Server Disconnected";
@@ -37,6 +38,7 @@ Othello.client.game = function() {
         });
 		socket.addEventListener("message", function(event) {
          var recievedData=eval('(' + event.data + ')');
+	//	 alert(recievedData.keyCode);
 		 switch(recievedData.keyCode)
 		 {
 			case 1:
@@ -47,11 +49,37 @@ Othello.client.game = function() {
 				document.getElementById("userlist").innerHTML="";
 				for(var i=0; i<curPlayerList.length;i++)
 				{
-					document.getElementById("userlist").innerHTML+="<a onclick=invite(\"" + curPlayerList[i]+ "\")>"+curPlayerList[i] + "</a><br/>";
+					document.getElementById("userlist").innerHTML+="<a onclick=inviteselect(\"" + curPlayerList[i]+ "\")>"+curPlayerList[i] + "</a><br/>";
 				}
 			break;
 			case 2:
 				  document.getElementById('serverstatus').innerHTML = "this name is already taken/is invalid";
+			break;
+			
+			case 3:
+				var curPlayerList= recievedData.players;
+				document.getElementById("userlist").innerHTML="";
+				for(var i=0; i<curPlayerList.length;i++)
+				{
+					document.getElementById("userlist").innerHTML+="<a onclick=inviteselect(\"" + curPlayerList[i]+ "\")>"+curPlayerList[i] + "</a><br/>";
+				}
+				
+				if(personToInvite!="" && recievedData!=recievedData.removedPlayer)
+				document.getElementById("userlist").innerHTML=document.getElementById("userlist").innerHTML.replace("onclick=\"inviteselect(&quot;"+playerToInvite + "&quot;","style=\"color:red\" onclick=\"inviteselect(&quot;" + playerToInvite + "&quot;");
+				
+			break;
+			//User added
+			case 4:
+				var curPlayerList= recievedData.players;
+				document.getElementById("userlist").innerHTML="";
+				for(var i=0; i<curPlayerList.length;i++)
+				{
+					document.getElementById("userlist").innerHTML+="<a onclick=inviteselect(\"" + curPlayerList[i]+ "\")>"+curPlayerList[i] + "</a><br/>";
+				}
+				
+				if(personToInvite!="")
+				document.getElementById("userlist").innerHTML=document.getElementById("userlist").innerHTML.replace("onclick=\"inviteselect(&quot;"+playerToInvite + "&quot;","style=\"color:red\" onclick=\"inviteselect(&quot;" + playerToInvite + "&quot;");
+				
 			break;
 		 }
         });	
@@ -143,8 +171,14 @@ Othello.client.game = function() {
 	}
 	
 		
-	invite= function(playerToInvite){
-	alert(playerToInvite);
+	inviteselect= function(playerToInvite){
+	personToInvite=playerToInvite;
+	var oldHTML=document.getElementById("userlist").innerHTML;
+	oldHTML=oldHTML.replace("style=\"color:red\"","");
+	//alert(oldHTML);
+	var newHTML=oldHTML.replace("onclick=\"inviteselect(&quot;"+playerToInvite + "&quot;","style=\"color:red\" onclick=\"inviteselect(&quot;" + playerToInvite + "&quot;");
+	document.getElementById("userlist").innerHTML=newHTML;
+	//alert(newHTML);
 	}
 
 	// Update board cell to new state
