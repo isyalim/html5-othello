@@ -1,4 +1,16 @@
-var message = namespace("message");
+function DataMessage(type,data,sentFrom){
+				//ivars - unique for every instance
+				this.name=pName;
+				this.inGame=false;
+				this.gameId=0;
+				this.connection=conn;
+			}
+
+
+
+
+
+/*var message = namespace("message");
 	message = function(){
 			function Message(type,data,sentFrom){
 				//ivars - unique for every instance
@@ -11,4 +23,4 @@ var message = namespace("message");
 			return{
 			Message:Message
 			}
-}();
+}();*/

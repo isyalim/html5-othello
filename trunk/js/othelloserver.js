@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 var WebSocketServer = require('websocket').server;
 var http = require('http');
+var playerList= new Array();
+var boardList= new Array();
+
 
 var server = http.createServer(function(request, response) {
     console.log((new Date()) + ' Received request for ' + request.url);
@@ -38,9 +41,85 @@ wsServer.on('request', function(request) {
     console.log((new Date()) + ' Connection accepted.');
     connection.on('message', function(message) {
             console.log('Received Message: ' + message.utf8Data);
-			connection.sendUTF(message.utf8Data);
+			var recievedData=eval('(' + message.utf8Data + ')');
+			switch(recievedData.keyCode){
+				case 0:
+					var playerName=recievedData.loginData;
+					var playerExists=false;
+					for(var i=0; i<playerList.length;i++)
+					{
+						if(playerList[i].name==playerName)
+						playerExists=true;
+					}
+					if(!playerExists){
+						var newPlayer= new ClientPlayer(playerName,connection);
+						playerList.push(newPlayer);
+						var o={
+							keyCode:1,
+							players:currentPlayers()
+						}
+						connection.send(JSON.stringify(o));
+					}
+					else{
+						var o={
+							keyCode:2
+						}
+						connection.send(JSON.stringify(o));
+					}
+				  break;
+			}
+			
     });
     connection.on('close', function(reasonCode, description) {
         console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
     });
 });
+
+//returns an array of a list of the current players in the area
+function currentPlayers()
+{
+	var returnedArray= new Array();
+	for(var i=0; i<playerList.length;i++)
+	{
+		if(playerList[i].gameId==0)
+		{
+			returnedArray.push(playerList[i].name);
+		}
+	}
+	return returnedArray;
+	
+}
+
+
+
+
+//ITEMS
+function GameBoard(curBoard,gID,p1,p2){
+				//ivars - unique for every instance
+				this.layout=curBoard;
+				this.gameId=gameId;
+				this.player1=p1;
+				this.player2=p2;
+				this.whoseTurn=this.player1;
+				return this;
+			}
+function ClientPlayer(pName,conn){
+				//ivars - unique for every instance
+				this.name=pName;
+				this.inGame=false;
+				this.gameId=0;
+				this.connection=conn;
+			}
+function DataMessage(type,data,sentFrom){
+				//ivars - unique for every instance
+				this.msgType=type;
+				this.sender=sentFrom;
+				this.data=data;
+			}
+
+function Challenge(p1,p2,cID){
+				//ivars - unique for every instance
+				this.player1=p1;
+				this.player2=p2;
+				this.challengeID=this.cID;
+			}
