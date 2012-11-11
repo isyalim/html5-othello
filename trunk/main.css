@@ -1,0 +1,71 @@
+body {
+    font-family: arial;
+	float:top;
+    }
+h1 {    
+    background-color:#CCC;
+    border: 1px solid;
+    color:#39F;
+    text-align: center;
+    }
+
+table {
+    background-color: #F60;
+    border: 1px solid #39F;
+    width: 100%;
+    }
+td {
+    border: 0px;
+    text-align: center;
+    }
+p {
+    color:#09F;
+    text-indent: 20px;    
+    }
+div#userlist
+{
+border: solid 2px #000000;
+padding: 4px;
+width:150px;
+height: 300px; 
+overflow:auto;
+position:absolute;
+top:75px;
+left:500px;
+}	
+div#mainchat
+{
+border: solid 2px #000000;
+padding: 4px;
+width:450px;
+height: 300px; 
+overflow:auto;
+position:absolute;
+top:75px;
+left:0px;
+}
+input#maininput
+{
+position:absolute;
+top:390px;
+width:458px;
+left:0px;
+}	
+input#mainchatbutton
+{
+position:absolute;
+top:415px;
+left:0px;
+}	
+input#invitebutton
+{
+position:absolute;
+top:390px;
+left:500px;
+}	
+a{
+	 color:#09F;
+}
+a:link { text-decoration: none }
+a:active { text-decoration: none }
+a:visited { text-decoration: none }

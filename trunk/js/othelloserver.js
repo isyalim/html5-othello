@@ -38,6 +38,9 @@ wsServer.on('request', function(request) {
     }
     var connection = request.accept('echo-protocol', request.origin);
 	console.log(request.data);
+	
+	
+	
     console.log((new Date()) + ' Connection accepted.');
     connection.on('message', function(message) {
             console.log('Received Message: ' + message.utf8Data);
@@ -59,6 +62,15 @@ wsServer.on('request', function(request) {
 							players:currentPlayers()
 						}
 						connection.send(JSON.stringify(o));
+						
+						var addedData={
+							keyCode:4,
+							players:currentPlayers()
+						}
+						for(var i=0;i<playerList.length;i++){
+							var p=playerList[i];
+							playerList[i].connection.send(JSON.stringify(addedData));
+						}
 					}
 					else{
 						var o={
@@ -71,7 +83,30 @@ wsServer.on('request', function(request) {
 			
     });
     connection.on('close', function(reasonCode, description) {
+		
         console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
+		var id=-1;
+		var removedP="";
+		for(var i=0;i<playerList.length;i++){
+			var p=playerList[i];
+			if(p.connection==connection){
+				id=playerList.indexOf(p);
+				removedP=p.name;
+			}
+		}
+		if(id!=-1)
+		playerList.splice(id,1);
+		
+		var o={
+			keyCode:3,
+			removedPlayer:removedP,
+			players:currentPlayers()
+		}
+		for(var i=0;i<playerList.length;i++){
+			var p=playerList[i];
+			p.connection.send(JSON.stringify(o));
+		}
+		
     });
 });
 
