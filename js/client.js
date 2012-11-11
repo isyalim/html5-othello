@@ -5,13 +5,16 @@ Othello.client.game = function() {
 	var GRID_SIZE = 50;
 	var boardWidth=NUM_ROWS*GRID_SIZE;
 	var boardHeight=NUM_COLS*GRID_SIZE;
-	
+	var loginbutton=document.getElementById('loginbutton');
 	// Variables
 	var boardImage;
 	var whitePieceImage;
 	var blackPieceImage;
-
+	var playerName;
 	var canvas, ctx;
+	
+	var socket;
+	var serverurl="ws://localhost:9090";
 
 	init = function() {
 		// Get canvas context
@@ -22,7 +25,47 @@ Othello.client.game = function() {
 		cacheImages();
 
 		// Open socket connection to server
-
+		 socket = new WebSocket(serverurl, "echo-protocol");
+		 socket.addEventListener("open", function(event) {
+		 
+          document.getElementById('serverstatus').innerHTML = "Server Connected";
+		  loginbutton.disabled=false;  
+        });
+		 socket.addEventListener("close", function(event) { 
+          document.getElementById('serverstatus').innerHTML = "Server Disconnected";
+		  loginbutton.disabled=true;
+        });
+		socket.addEventListener("message", function(event) {
+         var recievedData=eval('(' + event.data + ')');
+		 switch(recievedData.keyCode)
+		 {
+			case 1:
+				playerName=logininput.value;
+				document.getElementById("login").style.display = "none";
+				document.getElementById("mainscreen").style.display= "block";
+				var curPlayerList= recievedData.players;
+				document.getElementById("userlist").innerHTML="";
+				for(var i=0; i<curPlayerList.length;i++)
+				{
+					document.getElementById("userlist").innerHTML+="<a onclick=invite(\"" + curPlayerList[i]+ "\")>"+curPlayerList[i] + "</a><br/>";
+				}
+			break;
+			case 2:
+				  document.getElementById('serverstatus').innerHTML = "this name is already taken/is invalid";
+			break;
+		 }
+        });	
+		 socket.addEventListener("error", function(event) {
+          alert("Error: " + event);
+        });
+		
+		loginbutton.addEventListener("click",function(){
+			var objToSend={
+			keyCode:0,
+			loginData:logininput.value
+			}
+			socket.send(JSON.stringify(objToSend));
+		});
 	}
 
 
@@ -58,7 +101,6 @@ Othello.client.game = function() {
 		
 		// Draw white piece
 		tempCtx.clearRect(0,0,tempCanvas.width,tempCanvas.height);
-		console.log(tempCanvas.width);
 		tempCtx.fillStyle = "#FFFFFF";
 		tempCtx.beginPath();
 		tempCtx.arc(20, 20, 20, 0, Math.PI*2, true); 
@@ -99,6 +141,11 @@ Othello.client.game = function() {
 	checkGameOver = function() {
 
 	}
+	
+		
+	invite= function(playerToInvite){
+	alert(playerToInvite);
+	}
 
 	// Update board cell to new state
 	updateCell = function(x, y, state) {
@@ -118,6 +165,7 @@ Othello.client.game = function() {
 		// Send message to server
 
 	}
+
 
 	return {
 		draw : draw,
