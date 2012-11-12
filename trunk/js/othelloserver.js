@@ -78,6 +78,43 @@ wsServer.on('request', function(request) {
 						}
 						connection.send(JSON.stringify(o));
 					}
+					
+				break;
+				  
+				  case 5:
+				  var chatData= recievedData.chatData;
+				  var sentFrom= recievedData.sentFrom;
+				  var now= new Date();
+				  
+				  var sentMessage = sentFrom + "(" +  (now.getHours() +1) +  ":" +now.getMinutes() +  ":" +now.getSeconds() + "): " + chatData;
+				  var o={
+							keyCode:6,
+							chatData:sentMessage
+						}
+					console.log(sentMessage);
+						
+						for(var i=0;i<playerList.length;i++){
+							var p=playerList[i];
+							p.connection.send(JSON.stringify(o));
+						}
+				
+				  break;
+				  
+				  case 7:
+				  var inviteTo=recievedData.inviteTo;
+				  var invitefrom=recievedData.inviteFrom;
+				  for(var i=0; i<playerList.length;i++)
+				  {
+					var p= playerList[i];
+					if(p.name==inviteTo)
+					{
+						 var o={
+							keyCode:8,
+							inviteFrom:invitefrom
+						}
+						p.connection.send(JSON.stringify(o));
+					}
+				  }
 				  break;
 			}
 			
