@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Day 4</title>
+	<script src="lib/modernizr.js"></script>
+	<script src="js/loader.js"></script>
+	<script src="js/items.js"></script>
+	<link rel="stylesheet" href="main.css">
+</head>
+<body>
+
+<div id="login">
+<h1>Othello</h1>
+<h2 id='h2test'>Username</h2>
+<input id="logininput" size="30" type="text"></input></br>
+<input type="button" id="loginbutton" value="Log In" disabled="true"></input>
+<div id="serverstatus">Server is Not connected</div>
+</div>
+<div id="mainscreen" display= "none">
+<h2>Othello Main Screen</h2>
+<div id="mainchat"></div>
+<div id="userlist"></div></br>
+<input id="maininput" size="65" type="text"></input></br>
+<input type="button" id="mainchatbutton" value="Send chat"></input>
+<input type="button" id="invitebutton" value="Invite User"></input>
+</div>
+<div id="gamescreen" display="none">
+<h2>Othello Game Screen</h2>
+<canvas id="gameBoard" width="400" height="400"></canvas></br>
+<textarea readonly="readonly" rows="5" cols="50" id="gamechat" type="text"></textarea></br>
+<input  id="gameinput" size="65" type="text"></input></br>
+<input type="button" id="gamechatbutton" value="Send chat"></input>
+</div>
+</body>
+</html>
