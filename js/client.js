@@ -14,6 +14,7 @@ Othello.client.game = function() {
 	var canvas, ctx;
 	var personToInvite="";
 	var socket;
+	var challengeCounter=0;
 	var serverurl="ws://localhost:9090";
 
 	init = function() {
@@ -38,7 +39,18 @@ Othello.client.game = function() {
         });
 		socket.addEventListener("message", function(event) {
          var recievedData=eval('(' + event.data + ')');
-	//	 alert(recievedData.keyCode);
+		 alert(recievedData.keyCode);
+		
+		//NOTES ON THE JSON KEYCODES
+		//0:Client->Server, asking if username is ok/asking to login
+		//1:Server->Client, Username is OK, log in
+		//2:Server->Client, Username is Not OK
+		//3:Server->Client,Player has left, remove them from everyone's user list
+		//4:Server->Client, Player was added, add them to the user list
+		//5:Client->Server, Chat data while in the main menu
+		//6:Client->Server, Returns the formatted chat data to all users
+		//7:Client->Server, Sends a game invite to the target player
+		//8:Server->Client, Recieves and invite from a player.
 		 switch(recievedData.keyCode)
 		 {
 			case 1:
@@ -81,6 +93,19 @@ Othello.client.game = function() {
 				document.getElementById("userlist").innerHTML=document.getElementById("userlist").innerHTML.replace("onclick=\"inviteselect(&quot;"+playerToInvite + "&quot;","style=\"color:red\" onclick=\"inviteselect(&quot;" + playerToInvite + "&quot;");
 				
 			break;
+			
+			case 6:
+				var newChatLine= recievedData.chatData + "<br/>";
+				document.getElementById("mainchat").innerHTML+=newChatLine;
+				
+			break;
+			
+			case 8:
+				var inviteFrom=recievedData.inviteFrom;
+				var newChatLine= "Game invite recieved from " + inviteFrom + ".<input type=\"button\" onclick=\"acceptInvite(\'"+ inviteFrom + "\')\" value=\"Accept\"></input>";
+				newChatLine+= "<input type=\"button\" onclick=\"declineInvite(\'"+ inviteFrom + "\')\" value=\"Decline\"></input><br/>";
+				document.getElementById("mainchat").innerHTML+=newChatLine;
+			break;
 		 }
         });	
 		 socket.addEventListener("error", function(event) {
@@ -88,12 +113,54 @@ Othello.client.game = function() {
         });
 		
 		loginbutton.addEventListener("click",function(){
+						var strippedvalue = logininput.value.replace(/(<([^>]+)>)/ig,"");
 			var objToSend={
 			keyCode:0,
-			loginData:logininput.value
+			loginData:strippedvalue
 			}
+			
+			logininput.value = strippedvalue;
 			socket.send(JSON.stringify(objToSend));
 		});
+		
+		mainchatbutton.addEventListener("click",function(){
+		if(maininput.value!="")
+		{
+			var strippedvalue = maininput.value.replace(/(<([^>]+)>)/ig,"");
+			var objToSend={
+			keyCode:5,
+			chatData:strippedvalue,
+			sentFrom: playerName
+			}
+			maininput.value="";
+			socket.send(JSON.stringify(objToSend));
+		}
+		});
+		
+		invitebutton.addEventListener("click",function(){
+		if(personToInvite==playerName)
+		{
+			alert("cannot invite yourself to a game");
+		}
+		else if(personToInvite.value!="" && personToInvite.value!=" " && personToInvite.value!=null)
+		{
+			var objToSend={
+			keyCode:7,
+			inviteTo:personToInvite,
+			inviteFrom: playerName
+			}
+			socket.send(JSON.stringify(objToSend));
+			document.getElementById("mainchat").innerHTML+="invite to " + personToInvite + " sent.<br/>";
+		}
+		});
+	}
+	
+	acceptInvite = function(targetPlayer){
+		alert(targetPlayer +" accepted");
+	}
+	
+	declineInvite = function(targetPlayer){
+		alert(targetPlayer + " declined");
 	}
 
 
@@ -176,7 +243,7 @@ Othello.client.game = function() {
 	var oldHTML=document.getElementById("userlist").innerHTML;
 	oldHTML=oldHTML.replace("style=\"color:red\"","");
 	//alert(oldHTML);
-	var newHTML=oldHTML.replace("onclick=\"inviteselect(&quot;"+playerToInvite + "&quot;","style=\"color:red\" onclick=\"inviteselect(&quot;" + playerToInvite + "&quot;");
+	var newHTML=oldHTML.replace("onclick=\"inviteselect(&quot;"+playerToInvite + "&quot;","style=\"color:red\" onclick=\"inviteselect(&quot;"+ playerToInvite + "&quot;");
 	document.getElementById("userlist").innerHTML=newHTML;
 	//alert(newHTML);
 	}
