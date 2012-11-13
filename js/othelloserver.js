@@ -152,6 +152,26 @@ wsServer.on('request', function(request) {
 						playerList[sentFromIndex].gameID=gameIDCounter;
 						sentFromPlayer.connection.send(JSON.stringify(o));
 						playerToFind.connection.send(JSON.stringify(o));
+						
+						var o={
+							keyCode:3,
+							removedPlayer:sentFromPlayer.name,
+							players:currentPlayers()
+						}
+						for(var i=0;i<playerList.length;i++){
+							var p=playerList[i];
+							p.connection.send(JSON.stringify(o));
+						}
+						
+						o={
+							keyCode:3,
+							removedPlayer:playerToFind.name,
+							players:currentPlayers()
+						}
+						for(var i=0;i<playerList.length;i++){
+							var p=playerList[i];
+							p.connection.send(JSON.stringify(o));
+						}
 					}
 					//accepted, but other player not found
 					else if(playerToFind==""){
@@ -196,6 +216,71 @@ wsServer.on('request', function(request) {
 					{
 						console.log("breaks");
 					}
+				  break;
+				  
+				  case 13:
+					var sentBoard= receivedData.sentBoard;
+					var sentPieces= receivedData.sentPieces;
+					var targetPlayer=receivedData.targetPlayer;
+					var playerToFind="";
+					for(var i=0; i<playerList.length;i++){
+						var p=playerList[i];
+						if(p.name==targetPlayer)
+						{
+							playerToFind=p;
+						}
+					}
+					var o={
+							keyCode:14,
+							gameBoard:sentBoard,
+							gamePieces:sentPieces
+						}
+						if(playerToFind!="")
+						playerToFind.connection.send(JSON.stringify(o));
+					break;
+				 case 15:
+					var sentFrom= receivedData.sentFrom;
+					for(var i=0; i<playerList.length;i++){
+						if(playerList[i].name==sentFrom)
+						{
+							playerList[i].inGame=false;
+							playerList[i].gameId=0;
+							var addedData={
+							keyCode:4,
+							players:currentPlayers()
+							}
+							for(var i=0;i<playerList.length;i++){
+								var p=playerList[i];
+								playerList[i].connection.send(JSON.stringify(addedData));
+							}
+							break;
+						}
+					}
+					
+					
+				 break;
+				 
+				  case 16:
+				  var chatData= receivedData.chatData;
+				  var targetPlayer= receivedData.targetPlayer;
+				  var sentFrom= receivedData.sentFrom;
+				  var now= new Date();
+				  
+				  var sentMessage = sentFrom + "(" +  (now.getHours() +1) +  ":" +now.getMinutes() +  ":" +now.getSeconds() + "): " + chatData;
+				  var o={
+							keyCode:17,
+							chatData:sentMessage
+						}
+					console.log(sentMessage);	
+					for(var i=0;i<playerList.length;i++){
+						var p=playerList[i];
+						if(p.name==targetPlayer || p.name==sentFrom)
+						{
+						p.connection.send(JSON.stringify(o));
+						console.log("game message sent");
+						}
+					}
+				
 				  break;
 			}
 			
