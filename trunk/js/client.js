@@ -41,23 +41,18 @@ Othello.client.game = function() {
 			this.grid = new Array(this.height);
 			for (var i = 0; i < this.height; i++)
 				this.grid[i] = new Array(this.width);
-
+			pieces = new Array();
 			// Assign pieces to first spots
 			var halfWidth = this.width / 2;
 			var halfHeight = this.height / 2;
 
 			// White pieces
-			this.updateCell(halfWidth - 2,halfHeight - 1,  CELL_STATES.WHITE);
-			this.updateCell(halfWidth - 2,halfHeight, CELL_STATES.WHITE);
-			this.updateCell(halfWidth - 2, halfHeight + 1,  CELL_STATES.WHITE);
 			this.updateCell(halfWidth - 1, halfHeight - 1,  CELL_STATES.WHITE);
-			this.updateCell(halfWidth - 1, halfHeight + 1,  CELL_STATES.WHITE);
 			this.updateCell(halfWidth, halfHeight,  CELL_STATES.WHITE);
-			this.updateCell(halfWidth, halfHeight - 1,  CELL_STATES.WHITE);
-			this.updateCell(halfWidth, halfHeight + 1,  CELL_STATES.WHITE);
 			// Black pieces
 
 			this.updateCell(halfWidth - 1, halfHeight,  CELL_STATES.BLACK);
+			this.updateCell(halfWidth, halfHeight-1,  CELL_STATES.BLACK);
 		},
 		getStateAt : function(x, y) {
 			return this.grid[x][y];
@@ -71,6 +66,9 @@ Othello.client.game = function() {
 		board.init();
 		// Create cached images
 		cacheImages();
+		
+		draw();
+		
 		// Open socket connection to server
 		 socket = new WebSocket(serverurl, "echo-protocol");
 		 socket.addEventListener("open", function(event) {
@@ -93,7 +91,7 @@ Othello.client.game = function() {
 		//3:Server->Client,Player has left, remove them from everyone's user list
 		//4:Server->Client, Player was added, add them to the user list
 		//5:Client->Server, Chat data while in the main menu
-		//6:Client->Server, Returns the formatted chat data to all users
+		//6:Server->Client, Returns the formatted chat data to all users
 		//7:Client->Server, Sends a game invite to the target player
 		//8:Server->Client, Recieves an invite from a player.
 		//9:Client->Server, Accepts invitation from another player
@@ -101,6 +99,10 @@ Othello.client.game = function() {
 		//11:Server->Client, Start game between 2 people
 		//12:Server->Client, Error starting game, returns what went wrong as a message
 		//13:Client->Server, Move made, update other player
+		//14:Server->Client, Opponent has made a move, update player
+		//15:Client->Server, Player wishes to return to main menu
+		//16:Client->Server, Chat data while in the game menu
+		//17:Server->Client, Returns the formatted chat data to users in game
 				console.log(event.data);
 		 switch(receivedData.keyCode)
 		 {
@@ -128,7 +130,7 @@ Othello.client.game = function() {
 				}
 				
 				if(personToInvite!="" && receivedData!=receivedData.removedPlayer)
-				document.getElementById("userlist").innerHTML=document.getElementById("userlist").innerHTML.replace("onclick=\"inviteselect(&quot;"+playerToInvite + "&quot;","style=\"color:red\" onclick=\"inviteselect(&quot;" + playerToInvite + "&quot;");
+				document.getElementById("userlist").innerHTML=document.getElementById("userlist").innerHTML.replace("onclick=\"inviteselect(&quot;"+personToInvite + "&quot;","style=\"color:red\" onclick=\"inviteselect(&quot;" + personToInvite + "&quot;");
 				
 			break;
 			//User added
@@ -141,7 +143,7 @@ Othello.client.game = function() {
 				}
 				
 				if(personToInvite!="")
-				document.getElementById("userlist").innerHTML=document.getElementById("userlist").innerHTML.replace("onclick=\"inviteselect(&quot;"+playerToInvite + "&quot;","style=\"color:red\" onclick=\"inviteselect(&quot;" + playerToInvite + "&quot;");
+				document.getElementById("userlist").innerHTML=document.getElementById("userlist").innerHTML.replace("onclick=\"inviteselect(&quot;"+personToInvite + "&quot;","style=\"color:red\" onclick=\"inviteselect(&quot;" + personToInvite + "&quot;");
 				
 			break;
 			
@@ -159,10 +161,28 @@ Othello.client.game = function() {
 			break;
 			
 			case 11:
+				ctx = canvas.getContext("2d");
 				document.getElementById("mainscreen").style.display = "none";
+				document.getElementById("mainchat").innerHTML = "";
 				document.getElementById("gamescreen").style.display= "block";
-				gameData=receivedData.newGame;			
-				console.log(gameData.player1 + " " + gameData.player2 + " " + playerName + " " + gameData.whoseTurn);
+				document.getElementById("gamechat").innerHTML = "";
+				gameData=receivedData.newGame;	
+					
+				board.init();
+				ctx.save();
+				ctx.setTransform(1, 0, 0, 1, 0, 0);
+				ctx.clearRect(0, 0, 400, 400);
+				ctx.restore();
+				
+				draw();
+				board.grid= new Array();
+				board.pieces= new Array();
+				board.init();
+				ctx.save();
+				ctx.setTransform(1, 0, 0, 1, 0, 0);
+				ctx.clearRect(0, 0, 400, 400);
+				ctx.restore();
+				draw();
 				if(gameData.whoseTurn==playerName)
 				{
 					var addedText="It is your turn!";
@@ -187,6 +207,42 @@ Othello.client.game = function() {
 			case 12:
 				var errorMsg= receivedData.errorMsg;
 				document.getElementById("mainchat").innerHTML+=(errorMsg+ "<br/>");
+			break;
+			
+			case 14:
+				var sentBoard= receivedData.gameBoard;
+				var sentPieces=  receivedData.gamePieces;
+				var addedText="It is your turn!";
+					
+				if(playerName==gameData.player1)
+				addedText+="(Black)<br/>";
+				else
+				addedText+="(White)<br/>";
+				document.getElementById("gamechat").innerHTML+=addedText;
+				board.grid=sentBoard;
+				board.pieces=sentPieces;
+				draw();
+				
+				switch(checkGameOver())
+				{
+					case 0:
+					console.log("valid move available");
+					break;
+					case 1:				
+					changeTurn();
+					document.getElementById("gamechat").innerHTML+="No valid moves. You skip your turn.<br/>" + gameData.whoseTurn ;
+					break;
+					case 2:
+					gameOver();
+					
+					break;
+				}
+				gameData.whoseTurn=playerName;
+			break;
+			
+			case 17:
+				var newChatLine= receivedData.chatData + "<br/>";
+				document.getElementById("gamechat").innerHTML+=newChatLine;	
 			break;
 		 }
         });	
@@ -231,6 +287,26 @@ Othello.client.game = function() {
 			}
 			socket.send(JSON.stringify(objToSend));
 			document.getElementById("mainchat").innerHTML+="invite to " + personToInvite + " sent.<br/>";
+		}
+		});
+		
+		gamechatbutton.addEventListener("click",function(){
+		if(gameinput.value!="")
+		{
+			var strippedvalue = gameinput.value.replace(/(<([^>]+)>)/ig,"");
+			var opponent;
+			if(gameData.player1==playerName)
+			opponent=gameData.player2;
+			else
+			opponent=gameData.player1;
+			var objToSend={
+			keyCode:16,
+			chatData:strippedvalue,
+			targetPlayer: opponent,
+			sentFrom: playerName
+			}
+			gameinput.value="";
+			socket.send(JSON.stringify(objToSend));
 		}
 		});
 	}
@@ -333,15 +409,61 @@ Othello.client.game = function() {
 				board.getStateAt(loc.x, loc.y) == CELL_STATES.WHITE ? 
 					whitePieceImage : blackPieceImage,
 				(loc.x * 50) + 5,(loc.y * 50) + 5);
+				console.log("piece drawn");
 		}
 	}
 
 	// Check for game over conditions
 	checkGameOver = function() {
-		return false;
+		var playerColor;
+		if(gameData.player1==playerName)
+		playerColor=CELL_STATES.BLACK;
+		else
+		playerColor=CELL_STATES.WHITE;
+		
+		var validMoveAvailable=false;
+		var gridx=0, gridy=0;
+		for (var gridx=0; gridx<NUM_ROWS; gridx++)
+		{
+			for(var gridy=0; gridy<NUM_ROWS; gridy++)
+			{
+				if(board.getStateAt(gridx,gridy) ==CELL_STATES.EMPTY)
+				{
+					if(updateBoard(gridx,gridy,playerColor,false)>0)
+					validMoveAvailable=true;
+				}
+			}
+		}
+		if(!validMoveAvailable)
+		{
+			if(playerColor==CELL_STATES.BLACK)
+			playerColor=CELL_STATES.WHITE;
+			else
+			playerColor=CELL_STATES.BLACK;
+			for (var gridx=0; gridx<NUM_ROWS; gridx++)
+			{
+				for(var gridy=0; gridy<NUM_ROWS; gridy++)
+				{
+					if(board.getStateAt(gridx,gridy) ==CELL_STATES.EMPTY)
+					{
+						if(updateBoard(gridx,gridy,playerColor,false)>0)
+						validMoveAvailable=true;
+					}
+				}
+			}
+			if(!validMoveAvailable)//no moves available on either side
+				return 2;
+			else//no moves available on your side, but your opponent has valid moves
+				return 1;
+			
+		}
+		else//valid moves available
+			return 0;
+		
+		
 	}
 		
-	updateBoard = function(sentx,senty,color)
+	updateBoard = function(sentx,senty,color,changeBoard)
 	{
 		var oppColor;
 		var changedPieceCount=0;
@@ -358,12 +480,11 @@ Othello.client.game = function() {
 			//checking directly upwards
 			while(heldy>0 && iterCount<20){
 				iterCount++;
-				console.log("main y: "+ senty + " heldy:" + heldy);
 				if(board.getStateAt(heldx,heldy-1)==oppColor)
 				heldy--;
 				else if(board.getStateAt(heldx,heldy-1)==color ){
-					console.log(heldy + "<=" + senty);
 					while(heldy<=senty){
+						if(changeBoard)
 						board.updateCell(heldx,heldy,color);
 						heldy++;
 						changedPieceCount++;
@@ -388,6 +509,7 @@ Othello.client.game = function() {
 				}
 				else if(board.getStateAt(heldx+1,heldy-1)==color ){
 					while(heldy<=senty && heldx>=sentx){
+						if(changeBoard)
 						board.updateCell(heldx,heldy,color);
 						heldy++;
 						heldx--;
@@ -412,6 +534,7 @@ Othello.client.game = function() {
 				}
 				else if(board.getStateAt(heldx+1,heldy)==color ){
 					while(heldx>=sentx){
+						if(changeBoard)
 						board.updateCell(heldx,heldy,color);
 						heldx--;
 						changedPieceCount++;
@@ -436,6 +559,7 @@ Othello.client.game = function() {
 				}
 				else if(board.getStateAt(heldx+1,heldy+1)==color ){
 					while(heldy>=senty && heldx>=sentx){
+						if(changeBoard)
 						board.updateCell(heldx,heldy,color);
 						heldy--;
 						heldx--;
@@ -455,12 +579,11 @@ Othello.client.game = function() {
 			//checking directly upwards
 			while(heldy<NUM_COLS-1 && iterCount<20){
 				iterCount++;
-				console.log("main y: "+ senty + " heldy:" + heldy);
 				if(board.getStateAt(heldx,heldy+1)==oppColor)
 				heldy++;
 				else if(board.getStateAt(heldx,heldy+1)==color ){
-					console.log(heldy + "<=" + senty);
 					while(heldy>=senty){
+						if(changeBoard)
 						board.updateCell(heldx,heldy,color);
 						heldy--;
 						changedPieceCount++;
@@ -485,6 +608,7 @@ Othello.client.game = function() {
 				}
 				else if(board.getStateAt(heldx-1,heldy+1)==color ){
 					while(heldy>=senty && heldx<=sentx){
+						if(changeBoard)
 						board.updateCell(heldx,heldy,color);
 						heldy--;
 						heldx++;
@@ -509,6 +633,7 @@ Othello.client.game = function() {
 				}
 				else if(board.getStateAt(heldx-1,heldy)==color ){
 					while(heldx<=sentx){
+						if(changeBoard)
 						board.updateCell(heldx,heldy,color);
 						heldx++;
 						changedPieceCount++;
@@ -533,6 +658,7 @@ Othello.client.game = function() {
 				}
 				else if(board.getStateAt(heldx-1,heldy-1)==color ){
 					while(heldy<=senty && heldx<=sentx){
+						if(changeBoard)
 						board.updateCell(heldx,heldy,color);
 						heldy++;
 						heldx++;
@@ -563,10 +689,10 @@ Othello.client.game = function() {
 			console.log("click valid");
 			if(board.getStateAt(x,y) ==CELL_STATES.EMPTY)
 			{
-				if(updateBoard(x,y,playerColor)>0)
+				if(updateBoard(x,y,playerColor,true)>0)
 				{
 					console.log("valid move!");
-					draw();
+					changeTurn();
 				}
 				else
 				{
@@ -574,6 +700,83 @@ Othello.client.game = function() {
 				}
 			}
 		}
+	}
+	
+	changeTurn= function(){
+		draw();
+		var oppPlayer;
+		if(gameData.player1==playerName)
+		oppPlayer=gameData.player2;
+		else
+		oppPlayer=gameData.player1;
+		gameData.whoseTurn=oppPlayer;
+		var o={
+			keyCode:13,
+			sentBoard:board.grid,
+			sentPieces:board.pieces,
+			targetPlayer: oppPlayer
+		}
+		socket.send(JSON.stringify(o));
+		var addedText="It is " + gameData.whoseTurn+ "'s turn.";
+		if(playerName==gameData.player1)
+		addedText+="(White)<br/>";
+		else
+		addedText+="(Black)<br/>";
+		document.getElementById("gamechat").innerHTML+=addedText;
+		if(checkGameOver()==2)
+			gameOver();
+	}
+	
+	gameOver= function(){
+		console.log("game over");
+		gameData.whoseTurn="";
+		var blackCount=0, whiteCount=0;
+		for (var gridx=0; gridx<NUM_ROWS; gridx++)
+		{
+			for (var gridy=0; gridy<NUM_COLS; gridy++)
+			{
+				if(board.getStateAt(gridx,gridy)==CELL_STATES.BLACK)
+				blackCount++;
+				else if(board.getStateAt(gridx,gridy)==CELL_STATES.WHITE)
+				whiteCount++;
+			}
+		}
+		var winnerName="";
+		var textOutput="";
+		
+		if(blackCount>whiteCount)
+		{
+			winnerName=gameData.player1;
+			textOutput="Game over! " + winnerName + " wins! Score: " + blackCount + "-" + whiteCount;
+		}
+		else if(blackCount<whiteCount)
+		{
+			winnerName=gameData.player2;
+			textOutput="Game over! " + winnerName + " wins! Score: " + whiteCount + "-" + blackCount;
+		}
+		else
+		{
+			textOutput="Game over! It's a tie! Score: " + whiteCount + "-" + blackCount;
+		}
+		textOutput+="<input type=\"button\" onclick=\"toMainMenu()\" value=\"Main Menu\"></input><br/>";
+		document.getElementById("gamechat").innerHTML+=textOutput;
+	}
+	
+	toMainMenu = function(){
+				document.getElementById("mainscreen").style.display = "block";
+				document.getElementById("mainchat").innerHTML = "";
+				document.getElementById("gamescreen").style.display= "none";
+				document.getElementById("gamechat").innerHTML = "";
+				board.init();
+			var o={
+			keyCode:15,
+			sentFrom:playerName,
+			}
+			socket.send(JSON.stringify(o));	
+			ctx.save();
+			ctx.setTransform(1, 0, 0, 1, 0, 0);
+			ctx.clearRect(0, 0, 400, 400);
+			ctx.restore();			
 	}
 
 
