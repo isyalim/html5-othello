@@ -63,6 +63,14 @@ position:absolute;
 top:390px;
 left:500px;
 }	
+div#gamechat
+{
+border: solid 2px #000000;
+padding: 4px;
+width:392px;
+height: 120px; 
+overflow:auto;
+}
 a{
 	 color:#09F;
 }
