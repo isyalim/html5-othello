@@ -142,6 +142,7 @@ wsServer.on('request', function(request) {
 					if(playerToFind!="" && !playerToFind.inGame){
 						gameIDCounter++;
 						var createdGame=new GameBoard(new Array([0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,1,2,0,0,0],[0,0,0,2,1,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0]),gameIDCounter,sentFromPlayer.name,playerToFind.name);
+						boardList.push(createdGame);
 						var o={
 							keyCode:11,
 							newGame:createdGame
@@ -243,6 +244,35 @@ wsServer.on('request', function(request) {
 					for(var i=0; i<playerList.length;i++){
 						if(playerList[i].name==sentFrom)
 						{
+							for(var j=0;j<boardList.length;j++)
+							{
+								if(playerList[i].gameId==boardList[j].gameId)
+								{
+									var otherPlayerName="";
+									if(playerList[i].name==boardList[j].player1)
+									otherPlayerName=boardList[j].player2;
+									else
+									otherPlayerName=boardList[j].player1;
+									otherPlayer="";
+									for(var k=0; k<playerList.length;k++){
+										if(otherPlayerName==playerList[k]){
+											otherPlayer= playerList[k];
+										}
+									}
+									if(otherPlayer!=""){
+										if(!otherPlayer.inGame){
+											boardList.splice(j,1);
+										}
+										else{
+											var o={
+												keyCode:17,
+												chatData:"Opponent has left the game. <input type=\"button\" onclick=\"toMainMenu()\" value=\"Main Menu\"></input><br/>"
+											}
+											otherPlayer.send(JSON.stringify(addedData));
+										}
+									}
+								}
+							}
 							playerList[i].inGame=false;
 							playerList[i].gameId=0;
 							var addedData={
@@ -294,20 +324,46 @@ wsServer.on('request', function(request) {
 			var p=playerList[i];
 			if(p.connection==connection){
 				id=playerList.indexOf(p);
-				removedP=p.name;
+				removedP=p;
 			}
 		}
 		if(id!=-1)
-		playerList.splice(id,1);
-		
-		var o={
-			keyCode:3,
-			removedPlayer:removedP,
-			players:currentPlayers()
-		}
-		for(var i=0;i<playerList.length;i++){
-			var p=playerList[i];
-			p.connection.send(JSON.stringify(o));
+		{
+
+			if(removedP.inGame){
+					for(var i=0; i<boardList.length; i++){
+					if(removedP.gameId= boardList[i].gameId){
+						var opponentName;
+						if(removedP.name == boardList[i].player1)
+						opponentName=boardList[i].player2;
+						else if(removedP.name == boardList[i].player2)
+						opponentName=boardList[i].player1;
+						console.log(opponentName);
+						for(var j=0; j<playerList.length; j++){
+							if(opponentName==playerList[j].name)
+							{
+								var o={
+										keyCode:17,
+										chatData:removedP.name + " has left the game.<input type=\"button\" onclick=\"toMainMenu()\" value=\"Main Menu\"></input><br/>"
+									}
+									playerList[j].connection.send(JSON.stringify(o));
+							}
+						
+						}
+					}
+				}
+				var o={
+					keyCode:3,
+					removedPlayer:removedP.name,
+					players:currentPlayers()
+				}
+				for(var i=0;i<playerList.length;i++){
+					var p=playerList[i];
+					p.connection.send(JSON.stringify(o));
+				}
+			}
+			playerList.splice(id,1);
+			
 		}
 		
     });
