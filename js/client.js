@@ -5,6 +5,7 @@ Othello.client.game = function() {
 	var GRID_SIZE = 50;
 	var boardWidth=NUM_ROWS*GRID_SIZE;
 	var boardHeight=NUM_COLS*GRID_SIZE;
+	var gameState = 0;
 	var loginbutton=document.getElementById('loginbutton');
 	const CELL_STATES = {
 		EMPTY : null,
@@ -68,7 +69,15 @@ Othello.client.game = function() {
 		cacheImages();
 		
 		draw();
-		
+		window.addEventListener("keydown", function(e){
+			if(e.keyCode==13){
+				if(gameState==1){
+				sendMainChat();
+				}
+				else if (gameState==2){
+				sendGameChat();
+				}
+			}});
 		// Open socket connection to server
 		 socket = new WebSocket(serverurl, "echo-protocol");
 		 socket.addEventListener("open", function(event) {
@@ -101,7 +110,7 @@ Othello.client.game = function() {
 		//13:Client->Server, Move made, update other player
 		//14:Server->Client, Opponent has made a move, update player
 		//15:Client->Server, Player wishes to return to main menu
-		//16:Client->Server, Chat data while in the game menu
+		//16:Client->Server, Chat data while in the game
 		//17:Server->Client, Returns the formatted chat data to users in game
 				console.log(event.data);
 		 switch(receivedData.keyCode)
@@ -110,6 +119,7 @@ Othello.client.game = function() {
 				playerName=logininput.value;
 				document.getElementById("login").style.display = "none";
 				document.getElementById("mainscreen").style.display= "block";
+				gameState=1;
 				var curPlayerList= receivedData.players;
 				document.getElementById("userlist").innerHTML="";
 				for(var i=0; i<curPlayerList.length;i++)
@@ -166,6 +176,7 @@ Othello.client.game = function() {
 				document.getElementById("mainchat").innerHTML = "";
 				document.getElementById("gamescreen").style.display= "block";
 				document.getElementById("gamechat").innerHTML = "";
+					gameState=2;
 				gameData=receivedData.newGame;	
 					
 				board.init();
@@ -262,17 +273,7 @@ Othello.client.game = function() {
 		});
 		
 		mainchatbutton.addEventListener("click",function(){
-		if(maininput.value!="")
-		{
-			var strippedvalue = maininput.value.replace(/(<([^>]+)>)/ig,"");
-			var objToSend={
-			keyCode:5,
-			chatData:strippedvalue,
-			sentFrom: playerName
-			}
-			maininput.value="";
-			socket.send(JSON.stringify(objToSend));
-		}
+		sendMainChat();
 		});
 		
 		invitebutton.addEventListener("click",function(){
@@ -291,23 +292,7 @@ Othello.client.game = function() {
 		});
 		
 		gamechatbutton.addEventListener("click",function(){
-		if(gameinput.value!="")
-		{
-			var strippedvalue = gameinput.value.replace(/(<([^>]+)>)/ig,"");
-			var opponent;
-			if(gameData.player1==playerName)
-			opponent=gameData.player2;
-			else
-			opponent=gameData.player1;
-			var objToSend={
-			keyCode:16,
-			chatData:strippedvalue,
-			targetPlayer: opponent,
-			sentFrom: playerName
-			}
-			gameinput.value="";
-			socket.send(JSON.stringify(objToSend));
-		}
+		sendGameChat();
 		});
 	}
 	
@@ -767,6 +752,7 @@ Othello.client.game = function() {
 				document.getElementById("mainchat").innerHTML = "";
 				document.getElementById("gamescreen").style.display= "none";
 				document.getElementById("gamechat").innerHTML = "";
+					gameState=1;
 				board.init();
 			var o={
 			keyCode:15,
@@ -777,6 +763,39 @@ Othello.client.game = function() {
 			ctx.setTransform(1, 0, 0, 1, 0, 0);
 			ctx.clearRect(0, 0, 400, 400);
 			ctx.restore();			
+	}
+	
+	sendMainChat = function(){
+		if(maininput.value!="")
+		{
+			var strippedvalue = maininput.value.replace(/(<([^>]+)>)/ig,"");
+			var objToSend={
+			keyCode:5,
+			chatData:strippedvalue,
+			sentFrom: playerName
+			}
+			maininput.value="";
+			socket.send(JSON.stringify(objToSend));
+		}
+	}
+	sendGameChat = function(){
+		if(gameinput.value!="")
+		{
+			var strippedvalue = gameinput.value.replace(/(<([^>]+)>)/ig,"");
+			var opponent;
+			if(gameData.player1==playerName)
+			opponent=gameData.player2;
+			else
+			opponent=gameData.player1;
+			var objToSend={
+			keyCode:16,
+			chatData:strippedvalue,
+			targetPlayer: opponent,
+			sentFrom: playerName
+			}
+			gameinput.value="";
+			socket.send(JSON.stringify(objToSend));
+		}
 	}
 
 
