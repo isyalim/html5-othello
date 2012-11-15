@@ -7,12 +7,12 @@ var gameIDCounter=0;
 
 
 var server = http.createServer(function(request, response) {
-    console.log((new Date()) + ' Received request for ' + request.url);
+   // console.log((new Date()) + ' Received request for ' + request.url);
     response.writeHead(404);
     response.end();
 });
 server.listen(9090, function() {
-    console.log((new Date()) + ' Server is listening on port 9090');
+    //console.log((new Date()) + ' Server is listening on port 9090');
 });
 
 wsServer = new WebSocketServer({
@@ -34,19 +34,17 @@ wsServer.on('request', function(request) {
     if (!originIsAllowed(request.origin)) {
       // Make sure we only accept requests from an allowed origin
       request.reject();
-      console.log((new Date()) + ' Connection from origin ' + request.origin + ' rejected.');
+      //console.log((new Date()) + ' Connection from origin ' + request.origin + ' rejected.');
       return;
     }
+	
     var connection = request.accept('echo-protocol', request.origin);
-	console.log(request.data);
 	
-	
-	
-    console.log((new Date()) + ' Connection accepted.');
     connection.on('message', function(message) {
-            console.log('Received Message: ' + message.utf8Data);
+            //console.log('Received Message: ' + message.utf8Data);
 			var receivedData=eval('(' + message.utf8Data + ')');
 			switch(receivedData.keyCode){
+				//a client is asking if a username is valid to log in with
 				case 0:
 					var playerName=receivedData.loginData;
 					var playerExists=false;
@@ -81,7 +79,7 @@ wsServer.on('request', function(request) {
 					}
 					
 				break;
-				  
+				  //some has chatted in the main menu
 				  case 5:
 				  var chatData= receivedData.chatData;
 				  var sentFrom= receivedData.sentFrom;
@@ -92,7 +90,7 @@ wsServer.on('request', function(request) {
 							keyCode:6,
 							chatData:sentMessage
 						}
-					console.log(sentMessage);
+					//console.log(sentMessage);
 						
 						for(var i=0;i<playerList.length;i++){
 							var p=playerList[i];
@@ -100,7 +98,7 @@ wsServer.on('request', function(request) {
 						}
 				
 				  break;
-				  
+				  //a player has invited another player to play
 				  case 7:
 				  var inviteTo=receivedData.inviteTo;
 				  var invitefrom=receivedData.inviteFrom;
@@ -117,7 +115,7 @@ wsServer.on('request', function(request) {
 					}
 				  }
 				  break;
-				  
+				  //an invitation was accepted by a player
 				  case 9:
 					var sentFrom=receivedData.sentFrom;
 					var acceptedPlayer=receivedData.acceptedPlayer;
@@ -191,6 +189,7 @@ wsServer.on('request', function(request) {
 						sentFromPlayer.connection.send(JSON.stringify(o));
 					}
 				  break;
+				  //an invitation has been declined by a player
 				  case 10:
 					
 					var sentFrom=receivedData.sentFrom;
@@ -202,7 +201,7 @@ wsServer.on('request', function(request) {
 						{
 							
 							playerToFind=p;
-							console.log(p.name + " " + playerToFind);
+							//console.log(p.name + " " + playerToFind);
 						}
 					}
 					if(playerToFind!=""){
@@ -210,15 +209,15 @@ wsServer.on('request', function(request) {
 							keyCode:12,
 							errorMsg:"Player " + sentFrom +" has declined your invitation."
 						}
-						console.log("sent 12");
+						//console.log("sent 12");
 						playerToFind.connection.send(JSON.stringify(o));
 					}
 					else
 					{
-						console.log("breaks");
+						//console.log("breaks");
 					}
 				  break;
-				  
+				  //a player has made a move in-game
 				  case 13:
 					var sentBoard= receivedData.sentBoard;
 					var sentPieces= receivedData.sentPieces;
@@ -239,6 +238,7 @@ wsServer.on('request', function(request) {
 						if(playerToFind!="")
 						playerToFind.connection.send(JSON.stringify(o));
 					break;
+				//player returns to the main menu
 				 case 15:
 					var sentFrom= receivedData.sentFrom;
 					for(var i=0; i<playerList.length;i++){
@@ -289,7 +289,7 @@ wsServer.on('request', function(request) {
 					
 					
 				 break;
-				 
+				 //a player chats in the main chat window
 				  case 16:
 				  var chatData= receivedData.chatData;
 				  var targetPlayer= receivedData.targetPlayer;
@@ -301,13 +301,13 @@ wsServer.on('request', function(request) {
 							keyCode:17,
 							chatData:sentMessage
 						}
-					console.log(sentMessage);	
+					//console.log(sentMessage);	
 					for(var i=0;i<playerList.length;i++){
 						var p=playerList[i];
 						if(p.name==targetPlayer || p.name==sentFrom)
 						{
 						p.connection.send(JSON.stringify(o));
-						console.log("game message sent");
+						//console.log("game message sent");
 						}
 					}
 				
@@ -315,9 +315,10 @@ wsServer.on('request', function(request) {
 			}
 			
     });
+	//occurs when a player closes his connection
     connection.on('close', function(reasonCode, description) {
 		
-        console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
+       // console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
 		var id=-1;
 		var removedP="";
 		for(var i=0;i<playerList.length;i++){
@@ -331,6 +332,7 @@ wsServer.on('request', function(request) {
 		{
 
 			if(removedP.inGame){
+					//this section of the code tells the other player in the game that the player has left, if the player is in-game
 					for(var i=0; i<boardList.length; i++){
 					if(removedP.gameId= boardList[i].gameId){
 						var opponentName;
@@ -338,7 +340,7 @@ wsServer.on('request', function(request) {
 						opponentName=boardList[i].player2;
 						else if(removedP.name == boardList[i].player2)
 						opponentName=boardList[i].player1;
-						console.log(opponentName);
+						//console.log(opponentName);
 						for(var j=0; j<playerList.length; j++){
 							if(opponentName==playerList[j].name)
 							{
@@ -351,6 +353,8 @@ wsServer.on('request', function(request) {
 						
 						}
 					}
+					
+					
 				}
 				var o={
 					keyCode:3,
@@ -387,7 +391,7 @@ function currentPlayers()
 
 //ITEMS
 function GameBoard(curBoard,gID,p1,p2){
-				//ivars - unique for every instance
+				//a representation of the game board in a game
 				this.layout=curBoard;
 				this.gameId=gID;
 				this.player1=p1;
@@ -395,22 +399,9 @@ function GameBoard(curBoard,gID,p1,p2){
 				this.whoseTurn=this.player1;
 			}
 function ClientPlayer(pName,conn){
-				//ivars - unique for every instance
+				//a representation of the player
 				this.name=pName;
 				this.inGame=false;
 				this.gameId=0;
 				this.connection=conn;
-			}
-function DataMessage(type,data,sentFrom){
-				//ivars - unique for every instance
-				this.msgType=type;
-				this.sender=sentFrom;
-				this.data=data;
-			}
-
-function Challenge(p1,p2,cID){
-				//ivars - unique for every instance
-				this.player1=p1;
-				this.player2=p2;
-				this.challengeID=this.cID;
 			}
