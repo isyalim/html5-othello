@@ -21,7 +21,7 @@ Othello.client.game = function() {
 	var personToInvite="";
 	var socket;
 	var challengeCounter=0;
-	var serverurl="ws://129.21.140.147:9090";
+	var serverurl="ws://localhost:9090";
 	var gameData;
 	
 	
@@ -82,12 +82,12 @@ Othello.client.game = function() {
 		 socket = new WebSocket(serverurl, "echo-protocol");
 		 socket.addEventListener("open", function(event) {
 		 
-          document.getElementById('serverstatus').innerHTML = "Server Connected";
+          document.getElementById('serverstatus').src = "icons/accept.png";
 		  loginbutton.disabled=false;  
 		  
         });
 		 socket.addEventListener("close", function(event) { 
-          document.getElementById('serverstatus').innerHTML = "Server Disconnected";
+          document.getElementById('serverstatus').src = "icons/exclamation.png";
 		  loginbutton.disabled=true;
         });
 		socket.addEventListener("message", function(event) {
@@ -284,9 +284,9 @@ Othello.client.game = function() {
 		
 		
 		//sends the main chat when the main chat button is pressed
-		mainchatbutton.addEventListener("click",function(){
-		sendMainChat();
-		});
+		// mainchatbutton.addEventListener("click",function(){
+		// sendMainChat();
+		// });
 		
 		//when the invite button is pressed, a player is invited to a game
 		invitebutton.addEventListener("click",function(){
@@ -304,9 +304,9 @@ Othello.client.game = function() {
 		}
 		});
 		
-		gamechatbutton.addEventListener("click",function(){
-		sendGameChat();
-		});
+		// gamechatbutton.addEventListener("click",function(){
+		// sendGameChat();
+		// });
 	}
 	
 	//when a player's name is clicked, that player's name changed red, to note that he has been selected
@@ -432,7 +432,7 @@ Othello.client.game = function() {
 			{
 				if(board.getStateAt(gridx,gridy) ==CELL_STATES.EMPTY)
 				{
-					/
+					//
 					if(updateBoard(gridx,gridy,playerColor,false)>0)
 					validMoveAvailable=true;
 				}
