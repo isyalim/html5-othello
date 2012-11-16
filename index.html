@@ -2,11 +2,12 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<title>Othello Client</title>
+		<title>HTML5 Othello</title>
 		<script src="lib/modernizr.js"></script>
 		<script src="js/loader.js"></script>
 		<script src="js/items.js"></script>
 		<link rel="stylesheet" href="main.css">
+		<link href='http://fonts.googleapis.com/css?family=Share+Tech+Mono' rel='stylesheet' type='text/css'>
 	</head>
 	<body>
 		<div id="content">
@@ -38,8 +39,10 @@
 			<div id="gamescreen" display="none">
 				<!-- <h2>Othello Game Screen</h2> -->
 				<canvas id="gameBoard" width="400" height="400"></canvas></br>
-				<div id="gamechat"></div>
-				<input  id="gameinput" placeholder="Press enter to send message" size="60" type="text"></input></br>
+				<div id="gameChatBox">
+					<div id="gamechat"></div>
+					<input id="gameinput" placeholder="Press enter to send message" size="60" type="text"></input>
+				</div>
 				<!-- <input type="button" id="gamechatbutton" value="Send chat"></input> -->
 			</div>
 		</div>

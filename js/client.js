@@ -21,7 +21,7 @@ Othello.client.game = function() {
 	var personToInvite="";
 	var socket;
 	var challengeCounter=0;
-	var serverurl="ws://localhost:9090";
+	var serverurl="ws://bdcold.wireless.rit.edu:9090";
 	var gameData;
 	
 	
