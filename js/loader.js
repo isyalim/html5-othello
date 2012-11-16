@@ -22,6 +22,9 @@ window.addEventListener("load", function() {
 			console.log("All files have been loaded.", Othello);
 			document.getElementById("mainscreen").style.display = "none";
 			document.getElementById("gamescreen").style.display = "none";
+			document.querySelector("#loginbutton").style.width = document.querySelector("#userInput").offsetWidth + "px";
+			document.querySelector("#gameBoard").style.height = document.querySelector("#gameBoard").style.width;
+
 			Othello.client.game.init();
 			Othello.client.game.draw();
 			
