@@ -24,6 +24,8 @@ window.addEventListener("load", function() {
 			document.getElementById("gamescreen").style.display = "none";
 			document.querySelector("#loginbutton").style.width = document.querySelector("#userInput").offsetWidth + "px";
 			document.querySelector("#gameBoard").style.height = document.querySelector("#gameBoard").style.width;
+			document.querySelector("#gameChatBox").style.width = 
+				(document.querySelector("#content").clientWidth - document.querySelector("#gameBoard").width - 16) + "px";
 
 			Othello.client.game.init();
 			Othello.client.game.draw();
